@@ -15,6 +15,8 @@ LFLAGS=""
 OBJECT_FILES=()
 REBUILD_TARGET=false
 
+CFLAGS="-MD $CFLAGS"
+
 build_objects() {
 	# Create build dir if not exists
 	mkdir -p "$BUILD_DIR"
@@ -24,6 +26,7 @@ build_objects() {
 		# Base name from source file.
 		local REL_PATH=$(realpath --relative-to="$SRC_DIR" "$SRC_FILE")
 		local OBJ_FILE="$BUILD_DIR/${REL_PATH%.cpp}.o"
+		local DEP_FILE="${OBJ_FILE%.o}.d"
 
 		# Create directories for the file object if necessary
 		mkdir -p "$(dirname "$OBJ_FILE")"
@@ -36,6 +39,19 @@ build_objects() {
 			echo "Compiling $SRC_FILE..."
 			$CXX $CFLAGS -c "$SRC_FILE" -o "$OBJ_FILE"
 			REBUILD_TARGET=true
+		elif [[ -f "$DEP_FILE" ]]; then
+			# Check dependencies from the .d file
+			if grep -qE '^\s*.+:\s*.+$' "$DEP_FILE"; then
+				local DEPENDENCIES=$(awk -F: '{for (i=2; i<=NF; i++) print $i}' "$DEP_FILE" | tr -d '\\' | xargs)
+				for DEP in $DEPENDENCIES; do
+					if [[ "$DEP" -nt "$OBJ_FILE" ]]; then
+						echo "Recompiling $SRC_FILE due to changes in $DEP..."
+						$CXX $CFLAGS -c "$SRC_FILE" -o "$OBJ_FILE"
+						REBUILD_TARGET=true
+						break
+					fi
+				done
+			fi
 		fi
 	done < <(find "$SRC_DIR" -type f -name "$SRC_EXT")
 }
@@ -55,14 +71,14 @@ link_exec() {
 }
 
 link_static() {
-    local LIB_FILE="$BUILD_DIR/lib$TARGET.a"
-    if [[ $REBUILD_TARGET == true || ! -f "$LIB_FILE" ]]; then
-        echo "Creating static library: $LIB_FILE..."
-        ar rcs "$LIB_FILE" "${OBJECT_FILES[@]}"
-        echo "Build complete: $LIB_FILE"
-    else
-        echo "Static library $LIB_FILE is up to date."
-    fi
+	local LIB_FILE="$BUILD_DIR/lib$TARGET.a"
+	if [[ $REBUILD_TARGET == true || ! -f "$LIB_FILE" ]]; then
+		echo "Creating static library: $LIB_FILE..."
+		ar rcs "$LIB_FILE" "${OBJECT_FILES[@]}"
+		echo "Build complete: $LIB_FILE"
+	else
+		echo "Static library $LIB_FILE is up to date."
+	fi
 }
 
 clean() {
@@ -85,14 +101,14 @@ case "$1" in
 		else
 			echo "Error: Unknoun '$TYPE'. Expected 'executable' o 'static'."
 		fi
-        ;;
+		;;
 	clean )
-        clean
-        ;;
-    * )
-        echo "Usage: $0 [build|clean]"
-        exit 1
-        ;;
+		clean
+		;;
+	* )
+		echo "Usage: $0 [build|clean]"
+		exit 1
+		;;
 
 esac
 
