@@ -2,13 +2,14 @@
 
 # Variables
 SRC_DIR="src"
-SRC_EXT="*.c"			# *.c  *.cpp
-TYPE="executable"		# executable/static
+SRC_EXT="*.cpp"				# *.c  *.cpp
+TYPE="executable"			# executable/static
 BUILD_DIR="build"
 TARGET="test"
-CXX="gcc"				# gcc  g++
+CXX="g++"					# gcc  g++
 CFLAGS="-Wall -I include"
 LFLAGS=""
+MODULE_DEPS=""
 
 ##############################################
 
@@ -86,6 +87,16 @@ clean() {
 	rm -rf "$BUILD_DIR"
 }
 
+check_libraries() {
+	for LIB in $MODULE_DEPS; do
+		if [[ -f "$LIB" && "$LIB" -nt "$BUILD_DIR/$TARGET" ]]; then
+			echo "Library $LIB has been updated. Relinking required."
+			REBUILD_TARGET=true
+			return
+		fi
+	done
+}
+
 # Sets the current directory
 echo "Entering directory $(dirname "$0")."
 pushd "$(dirname "$0")" > /dev/null
@@ -93,6 +104,7 @@ pushd "$(dirname "$0")" > /dev/null
 case "$1" in
 	build|"" )
 		build_objects
+		check_libraries
 
 		if [[ "$TYPE" == "executable" ]]; then
 			link_exec
