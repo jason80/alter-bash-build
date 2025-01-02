@@ -47,6 +47,12 @@ Setting the option `TYPE="static"`, the script will generate a static library in
 
 Then: if `target="Example"`, it will generate `libExample.a`
 
+## Dependencies
+
+Only the translation files that have been modified compared to the compiled objects will be compiled. If any object is compiled, the target is relinked.
+
+The script enables the compiler option to generate dependency files within the build directory. It then checks if they have been modified to regenerate the object.
+
 ## Modules
 
 Projects can be created with modules as follows:
