@@ -3,7 +3,7 @@
 # Variables
 SRC_DIR="src"
 SRC_EXT="*.cpp"				# *.c  *.cpp
-TYPE="executable"			# executable/static
+TYPE="executable"			# executable/static/shared
 BUILD_DIR="build"
 TARGET="test"
 CXX="g++"					# gcc  g++
@@ -82,6 +82,18 @@ link_static() {
 	fi
 }
 
+link_shared() {
+	# Crear una biblioteca compartida
+	local LIB_FILE="$BUILD_DIR/lib$TARGET.so"
+	if [[ $REBUILD_TARGET == true || ! -f "$LIB_FILE" ]]; then
+		echo "Creating shared library: $LIB_FILE..."
+		$CXX -shared "${OBJECT_FILES[@]}" -o "$LIB_FILE" $LFLAGS
+		echo "Build complete: $LIB_FILE"
+	else
+		echo "Shared library $LIB_FILE is up to date."
+	fi
+}
+
 clean() {
 	echo "Cleaning generated $BUILD_DIR ..."
 	rm -rf "$BUILD_DIR"
@@ -110,8 +122,10 @@ case "$1" in
 			link_exec
 		elif [[ "$TYPE" == "static" ]]; then
 			link_static
+		elif [[ "$TYPE" == "shared" ]]; then
+			link_shared
 		else
-			echo "Error: Unknoun '$TYPE'. Expected 'executable' o 'static'."
+			echo "Error: Unknoun '$TYPE'. Expected 'executable', 'static' or 'shared'."
 		fi
 		;;
 	clean )

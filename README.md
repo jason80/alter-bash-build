@@ -19,7 +19,7 @@ Then, simply modify the first lines of the script:
 ```bash
 SRC_DIR="src"				# Source code dir.
 SRC_EXT="*.c"				# *.c  *.cpp extensions.
-TYPE="executable"			# "executable" or "static" library target.
+TYPE="executable"			# "executable" target, "static" library or "shared" library.
 BUILD_DIR="build"			# Target build directory.
 TARGET="test"				# Name of the executable or library.
 CXX="gcc"					# "gcc" or "g++" compiler selection.
@@ -41,11 +41,13 @@ and run the script in the following ways:
 * `./build.sh` or `./build.sh build`: build the project.
 * `./build.sh clean`: clean the built files.
 
-## Static Libraries
+## Static and Shared Libraries
 
 Setting the option `TYPE="static"`, the script will generate a static library inside the `build/` directory.
 
 Then: if `target="Example"`, it will generate `libExample.a`
+
+On the other hand, the option `TYPE="shared"` generates a shared library (.so).
 
 ## Dependencies
 
