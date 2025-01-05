@@ -15,6 +15,7 @@ MODULE_DEPS=""
 
 OBJECT_FILES=()
 REBUILD_TARGET=false
+BUILD_ERROR=false
 
 CFLAGS="-MD $CFLAGS"
 
@@ -39,6 +40,12 @@ build_objects() {
 		if [[ ! -f "$OBJ_FILE" || "$SRC_FILE" -nt "$OBJ_FILE" ]]; then
 			echo "Compiling $SRC_FILE..."
 			$CXX $CFLAGS -c "$SRC_FILE" -o "$OBJ_FILE"
+
+			# Check error
+			if [[ $? -ne 0 ]]; then
+				BUILD_ERROR=true
+			fi
+
 			REBUILD_TARGET=true
 		elif [[ -f "$DEP_FILE" ]]; then
 			# Check dependencies from the .d file
@@ -48,6 +55,12 @@ build_objects() {
 					if [[ "$DEP" -nt "$OBJ_FILE" ]]; then
 						echo "Recompiling $SRC_FILE due to changes in $DEP..."
 						$CXX $CFLAGS -c "$SRC_FILE" -o "$OBJ_FILE"
+
+						# Check error
+						if [[ $? -ne 0 ]]; then
+							BUILD_ERROR=true
+						fi
+
 						REBUILD_TARGET=true
 						break
 					fi
@@ -109,24 +122,34 @@ check_libraries() {
 	done
 }
 
+build_target() {
+	build_objects
+
+	if [[ $BUILD_ERROR == true ]]; then
+		echo "Build process stopped due to compilation errors."
+        exit 1
+	fi
+
+	check_libraries
+
+	if [[ "$TYPE" == "executable" ]]; then
+		link_exec
+	elif [[ "$TYPE" == "static" ]]; then
+		link_static
+	elif [[ "$TYPE" == "shared" ]]; then
+		link_shared
+	else
+		echo "Error: Unknoun '$TYPE'. Expected 'executable', 'static' or 'shared'."
+	fi
+}
+
 # Sets the current directory
 echo "Entering directory $(dirname "$0")."
 pushd "$(dirname "$0")" > /dev/null
 
 case "$1" in
 	build|"" )
-		build_objects
-		check_libraries
-
-		if [[ "$TYPE" == "executable" ]]; then
-			link_exec
-		elif [[ "$TYPE" == "static" ]]; then
-			link_static
-		elif [[ "$TYPE" == "shared" ]]; then
-			link_shared
-		else
-			echo "Error: Unknoun '$TYPE'. Expected 'executable', 'static' or 'shared'."
-		fi
+		build_target
 		;;
 	clean )
 		clean
