@@ -40,6 +40,7 @@ and run the script in the following ways:
 
 * `./build.sh` or `./build.sh build`: build the project.
 * `./build.sh clean`: clean the built files.
+* `./build.sh run`: runs the target (only executables).
 
 ## Static and Shared Libraries
 
@@ -102,8 +103,8 @@ MODULE_DEPS="../ExtendLib/build/libExtendLib.a"		# Add module dependence to rebu
 ### build.sh (simple root build script):
 ```bash
 #!/bin/bash
-./ExtendLib/build_1.sh
-./main/build_2.sh
+./ExtendLib/build_1.sh $1
+./main/build_2.sh $1
 ```
 
 Consider `ExtendLib` and `main` as modules. `main` depends on `ExtendLib`. The following line makes the dependency more robust:
@@ -113,3 +114,5 @@ MODULE_DEPS="../ExtendLib/build/libExtendLib.a"
 ```
 
 If anything in `ExtendLib` changes, the `main` target is rebuilt.
+
+When using the `run` option, it checks if the target is available. It also recompiles if there are changes.

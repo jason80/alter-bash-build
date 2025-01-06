@@ -154,8 +154,15 @@ case "$1" in
 	clean )
 		clean
 		;;
+	run )
+		build_target
+		if [[ "$TYPE" == "executable" ]]; then
+			echo "Running $BUILD_DIR/$TARGET ..."
+			"./$BUILD_DIR/$TARGET"
+		fi
+		;;
 	* )
-		echo "Usage: $0 [build|clean]"
+		echo "Usage: $0 [build|clean|run]"
 		exit 1
 		;;
 
