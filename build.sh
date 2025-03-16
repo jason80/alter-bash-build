@@ -5,10 +5,10 @@ SRC_DIR="src"
 SRC_EXT="*.cpp"				# *.c  *.cpp
 TYPE="executable"			# executable/static/shared
 BUILD_DIR="build"
-TARGET="test"
+TARGET="truco"
 CXX="g++"					# gcc  g++
-CFLAGS="-Wall -I include"
-LFLAGS=""
+CFLAGS="-Wall -I include $(pkg-config --cflags gtkmm-4.0)"
+LFLAGS=$(pkg-config --libs gtkmm-4.0)
 MODULE_DEPS=""
 
 ##############################################
@@ -48,27 +48,27 @@ build_objects() {
 
 			REBUILD_TARGET=true
 		elif [[ -f "$DEP_FILE" ]]; then
-			# Check dependencies from the .d file
-			if grep -qE '^\s*.+:\s*.+$' "$DEP_FILE"; then
-				local DEPENDENCIES=$(awk -F: '{for (i=2; i<=NF; i++) print $i}' "$DEP_FILE" | tr -d '\\' | xargs)
-				for DEP in $DEPENDENCIES; do
-					if [[ "$DEP" -nt "$OBJ_FILE" ]]; then
-						echo "Recompiling $SRC_FILE due to changes in $DEP..."
-						$CXX $CFLAGS -c "$SRC_FILE" -o "$OBJ_FILE"
 
-						# Check error
-						if [[ $? -ne 0 ]]; then
-							BUILD_ERROR=true
-						fi
+    		local DEPENDENCIES=$(sed ':a;N;$!ba;s/\\\n//g' "$DEP_FILE" | awk '{$1=""; sub(/^ /, ""); print}' | tr ' ' '\n')
 
-						REBUILD_TARGET=true
-						break
+			for DEP in $DEPENDENCIES; do
+				if [[ -f "$DEP" && "$DEP" -nt "$OBJ_FILE" ]]; then
+					echo "Recompiling $SRC_FILE due to changes in $DEP..."
+					$CXX $CFLAGS -c "$SRC_FILE" -o "$OBJ_FILE"
+
+					# Check error
+					if [[ $? -ne 0 ]]; then
+						BUILD_ERROR=true
 					fi
-				done
-			fi
+
+					REBUILD_TARGET=true
+					break
+				fi
+			done
 		fi
 	done < <(find "$SRC_DIR" -type f -name "$SRC_EXT")
 }
+
 
 link_exec() {
 
@@ -172,3 +172,4 @@ esac
 echo "Leaving directory $(dirname "$0")"
 printf '%*s\n' "$(tput cols)" '' | tr ' ' '-'
 popd > /dev/null
+
