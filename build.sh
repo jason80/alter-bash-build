@@ -5,10 +5,10 @@ SRC_DIR="src"
 SRC_EXT="*.cpp"				# *.c  *.cpp
 TYPE="executable"			# executable/static/shared
 BUILD_DIR="build"
-TARGET="truco"
+TARGET="test"
 CXX="g++"					# gcc  g++
-CFLAGS="-Wall -I include $(pkg-config --cflags gtkmm-4.0)"
-LFLAGS=$(pkg-config --libs gtkmm-4.0)
+CFLAGS="-Wall -I include"
+LFLAGS=
 MODULE_DEPS=""
 
 ##############################################
