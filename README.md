@@ -47,7 +47,7 @@ and run the script in the following ways:
 
 Setting the option `TYPE="static"`, the script will generate a static library inside the `build/` directory.
 
-Then: if `target="Example"`, it will generate `libExample.a`
+Then: if `TARGET="Example"`, it will generate `libExample.a`
 
 On the other hand, the option `TYPE="shared"` generates a shared library (.so).
 
@@ -92,7 +92,7 @@ MODULE_DEPS=""
 ```bash
 SRC_DIR="src"
 SRC_EXT="*.cpp"
-TYPE="executable"		# Static library
+TYPE="executable"		# Executable
 BUILD_DIR="build"
 TARGET="test"			# Executable name
 CXX="g++"
