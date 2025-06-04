@@ -161,8 +161,15 @@ case "$1" in
 			"./$BUILD_DIR/$TARGET"
 		fi
 		;;
+	debug )
+		build_target
+		if [[ "$TYPE" == "executable" ]]; then
+			echo "Running $BUILD_DIR/$TARGET in debug mode ..."
+			gdb "./$BUILD_DIR/$TARGET"
+		fi
+		;;
 	* )
-		echo "Usage: $0 [build|clean|run]"
+		echo "Usage: $0 [build|clean|run|debug]"
 		exit 1
 		;;
 
@@ -172,4 +179,3 @@ esac
 echo "Leaving directory $(dirname "$0")"
 printf '%*s\n' "$(tput cols)" '' | tr ' ' '-'
 popd > /dev/null
-

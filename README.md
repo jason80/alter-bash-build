@@ -40,7 +40,8 @@ and run the script in the following ways:
 
 * `./build.sh` or `./build.sh build`: build the project.
 * `./build.sh clean`: clean the built files.
-* `./build.sh run`: runs the target (only executables).
+* `./build.sh run`: run the target (only executables).
+* `./build.sh debug`: run the executable using the GDB debugger (only executables). *Note: The object files and the executable must include debugging information generated with the compiler's options.*
 
 ## Static and Shared Libraries
 
