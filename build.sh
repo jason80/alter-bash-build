@@ -144,7 +144,7 @@ build_target() {
 }
 
 # Sets the current directory
-echo "Entering directory $(dirname "$0")."
+echo "Entering directory [$(dirname "$0")]"
 pushd "$(dirname "$0")" > /dev/null
 
 case "$1" in
@@ -176,6 +176,6 @@ case "$1" in
 esac
 
 # Back to the prev dir
-echo "Leaving directory $(dirname "$0")"
+echo "Leaving directory [$(dirname "$0")]"
 printf '%*s\n' "$(tput cols)" '' | tr ' ' '-'
 popd > /dev/null
