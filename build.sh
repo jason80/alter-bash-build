@@ -8,8 +8,15 @@ BUILD_DIR="build"
 TARGET="test"
 CXX="g++"					# gcc  g++
 CFLAGS="-Wall -I include"
-LFLAGS=
+LFLAGS=""
 MODULE_DEPS=""
+
+# Translation
+DOMAIN="$TARGET"
+LOCALE_DIR="locales"
+LANGUAGES="es fr it"        # space-separated list
+POT_FILE="$DOMAIN.pot"
+TRANSL_SRC_EXTRA=""			# Extra source files to translate (space-separated list)
 
 ##############################################
 
@@ -143,6 +150,70 @@ build_target() {
 	fi
 }
 
+build_translations() {
+    echo "Running build_translations ..."
+
+    # Remove the wildcard (*.) to extract the extension (e.g. c from *.c)
+    EXT="${SRC_EXT#*.}"
+
+    # Find all source files matching the extension
+    SRC_FILES=$(find "$SRC_DIR" -type f -name "*.${EXT}")
+
+    # Append extra translation sources
+    ALL_SRC_FILES="$SRC_FILES $TRANSL_SRC_EXTRA"
+
+    # Remove leading/trailing spaces
+    ALL_SRC_FILES=$(echo "$ALL_SRC_FILES" | xargs)
+
+    if [[ -z "$ALL_SRC_FILES" ]]; then
+        echo "No source files found for translation."
+        return
+    fi
+
+    # Determine if POT needs to be updated
+    local regenerate_pot=false
+    if [[ ! -f "$POT_FILE" ]]; then
+        regenerate_pot=true
+    else
+        for SRC in $ALL_SRC_FILES; do
+            if [[ -f "$SRC" && "$SRC" -nt "$POT_FILE" ]]; then
+                regenerate_pot=true
+                break
+            fi
+        done
+    fi
+
+    if [[ "$regenerate_pot" == true ]]; then
+        echo "Generating updated POT file..."
+        xgettext --keyword=_ -d "$DOMAIN" -o "$POT_FILE" $ALL_SRC_FILES
+    else
+        echo "POT file $POT_FILE is up to date."
+    fi
+
+    for LANG in $LANGUAGES; do
+        local PO_FILE="po/${LANG}.po"
+        local MO_FILE="$LOCALE_DIR/$LANG/LC_MESSAGES/$DOMAIN.mo"
+
+        if [[ ! -f "$PO_FILE" ]]; then
+            echo "Creating new PO file for language $LANG..."
+            mkdir -p "$(dirname "$PO_FILE")"
+            msginit -l "$LANG" -i "$POT_FILE" -o "$PO_FILE" --no-translator
+        else
+            if [[ "$POT_FILE" -nt "$PO_FILE" ]]; then
+                echo "Merging changes into $PO_FILE..."
+                msgmerge --update "$PO_FILE" "$POT_FILE"
+            else
+                echo "PO file $PO_FILE is up to date."
+            fi
+        fi
+
+        echo "Generating MO file for $LANG..."
+        mkdir -p "$(dirname "$MO_FILE")"
+        msgfmt "$PO_FILE" -o "$MO_FILE"
+    done
+}
+
+
 # Sets the current directory
 echo "Entering directory [$(dirname "$0")]"
 pushd "$(dirname "$0")" > /dev/null
@@ -168,8 +239,11 @@ case "$1" in
 			gdb "./$BUILD_DIR/$TARGET"
 		fi
 		;;
+	translations|transl )
+        build_translations
+        ;;
 	* )
-		echo "Usage: $0 [build|clean|run|debug]"
+		echo "Usage: $0 [build|clean|run|debug|translations|transl]"
 		exit 1
 		;;
 

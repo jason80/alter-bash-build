@@ -1,6 +1,8 @@
 # Alternative Build Script for C and C++
 This bash script serves as a quick alternative to tools like Make and CMake.
 
+![NEW](https://img.shields.io/badge/NEW-brightgreen) GNU gettext translation support ![NEW](https://img.shields.io/badge/NEW-brightgreen)
+
 ## Usage
 
 For the following example project structure, simply copy the `build.sh` file.
@@ -17,15 +19,22 @@ For the following example project structure, simply copy the `build.sh` file.
 Then, simply modify the first lines of the script:
 
 ```bash
-SRC_DIR="src"				# Source code dir.
-SRC_EXT="*.c"				# *.c  *.cpp extensions.
-TYPE="executable"			# "executable" target, "static" library or "shared" library.
-BUILD_DIR="build"			# Target build directory.
-TARGET="test"				# Name of the executable or library.
-CXX="gcc"					# "gcc" or "g++" compiler selection.
-CFLAGS="-Wall -I include"	# Compiler options.
-LFLAGS=""					# Linker options.
-MODULE_DEPS=""				# Module lib dependences.
+SRC_DIR="src"                  # Source code dir.
+SRC_EXT="*.c"                  # *.c  *.cpp extensions.
+TYPE="executable"              # "executable" target, "static" library or "shared" library.
+BUILD_DIR="build"              # Target build directory.
+TARGET="test"                  # Name of the executable or library.
+CXX="gcc"                      # "gcc" or "g++" compiler selection.
+CFLAGS="-Wall -I include"      # Compiler options.
+LFLAGS=""                      # Linker options.
+MODULE_DEPS=""                 # Module lib dependences.
+
+# Translation
+DOMAIN="$TARGET"
+LOCALE_DIR="locales"
+LANGUAGES="es fr it"           # space-separated list
+POT_FILE="$DOMAIN.pot"
+TRANSL_SRC_EXTRA=""            # Extra source files to translate (space-separated list)
 ```
 
 ## Running
@@ -35,6 +44,15 @@ Mark `build.sh` as executable using:
 ```bash
 chmod +x build.sh
 ```
+or
+```bash
+bash build.sh
+```
+
+You can create an alias
+```bash
+alias build='bash ./build.sh'
+```
 
 and run the script in the following ways:
 
@@ -42,6 +60,8 @@ and run the script in the following ways:
 * `./build.sh clean`: clean the built files.
 * `./build.sh run`: run the target (only executables).
 * `./build.sh debug`: run the executable using the GDB debugger (only executables). *Note: The object files and the executable must include debugging information generated with the compiler's options.*
+* `./build.sh translations` or
+`./build.sh transl`: create or update gettext translation files.
 
 ## Static and Shared Libraries
 
@@ -117,3 +137,29 @@ MODULE_DEPS="../ExtendLib/build/libExtendLib.a"
 If anything in `ExtendLib` changes, the `main` target is rebuilt.
 
 When using the `run` option, it checks if the target is available. It also recompiles if there are changes.
+
+## Translations
+
+The `translation` argument generates the file and directory structure for the project’s translation. You only need to list the languages separated by spaces. All the project’s source files will be included. Gettext must be properly configured, including both the domain and the strings to be read.
+
+### Generated example if `LANGUAGE="es fr it"`:
+
+- 📂 Project root
+	- 📂 locales
+		- 📂 es
+			- 📂 LC_MESSAGES
+				- 📄 test.mo
+		- 📂 fr
+			- 📂 LC_MESSAGES
+				- 📄 test.mo
+		- 📂 it
+			- 📂 LC_MESSAGES
+				- 📄 test.mo
+	- 📂 po
+		- 📄 es.po
+		- 📄 fr.po
+		- 📄 it.po
+	- 📄 test.pot
+	- 📄 **build.sh**
+
+
