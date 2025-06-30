@@ -5,7 +5,7 @@ SRC_DIR="src"
 SRC_EXT="*.cpp"				# *.c  *.cpp
 TYPE="executable"			# executable/static/shared
 BUILD_DIR="build"
-TARGET="test"
+TARGET="main"
 CXX="g++"					# gcc  g++
 CFLAGS="-Wall -I include"
 LFLAGS=""
@@ -16,7 +16,14 @@ DOMAIN="$TARGET"
 LOCALE_DIR="locales"
 LANGUAGES="es fr it"        # space-separated list
 POT_FILE="$DOMAIN.pot"
-TRANSL_SRC_EXTRA=""			# Extra source files to translate (space-separated list)
+TRANSL_SRC_EXTRA="build.sh"			# Extra source files to translate (space-separated list)
+
+##############################################
+#Internals:
+
+XGETTEXT='xgettext --keyword=_ -d $DOMAIN -o $POT_FILE $ALL_SRC_FILES'
+MSGINIT='msginit -l $LANG -i $POT_FILE -o $PO_FILE --no-translator'
+MSGMERGE='msgmerge --update $PO_FILE $POT_FILE'
 
 ##############################################
 
@@ -185,7 +192,7 @@ build_translations() {
 
     if [[ "$regenerate_pot" == true ]]; then
         echo "Generating updated POT file..."
-        xgettext --keyword=_ -d "$DOMAIN" -o "$POT_FILE" $ALL_SRC_FILES
+        eval $XGETTEXT
     else
         echo "POT file $POT_FILE is up to date."
     fi
@@ -197,11 +204,11 @@ build_translations() {
         if [[ ! -f "$PO_FILE" ]]; then
             echo "Creating new PO file for language $LANG..."
             mkdir -p "$(dirname "$PO_FILE")"
-            msginit -l "$LANG" -i "$POT_FILE" -o "$PO_FILE" --no-translator
+            eval $MSGINIT
         else
             if [[ "$POT_FILE" -nt "$PO_FILE" ]]; then
                 echo "Merging changes into $PO_FILE..."
-                msgmerge --update "$PO_FILE" "$POT_FILE"
+                eval $MSGMERGE
             else
                 echo "PO file $PO_FILE is up to date."
             fi
