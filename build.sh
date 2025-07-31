@@ -16,7 +16,7 @@ DOMAIN="$TARGET"
 LOCALE_DIR="locales"
 LANGUAGES="es fr it"        # space-separated list
 POT_FILE="$DOMAIN.pot"
-TRANSL_SRC_EXTRA="build.sh"			# Extra source files to translate (space-separated list)
+TRANSL_SRC_EXTRA=""			# Extra source files to translate (space-separated list)
 
 ##############################################
 #Internals:
@@ -24,6 +24,7 @@ TRANSL_SRC_EXTRA="build.sh"			# Extra source files to translate (space-separated
 XGETTEXT='xgettext --keyword=_ -d $DOMAIN -o $POT_FILE $ALL_SRC_FILES'
 MSGINIT='msginit -l $LANG -i $POT_FILE -o $PO_FILE --no-translator'
 MSGMERGE='msgmerge --update $PO_FILE $POT_FILE'
+MSGFMT='msgfmt $PO_FILE -o $MO_FILE'
 
 ##############################################
 
@@ -32,6 +33,19 @@ REBUILD_TARGET=false
 BUILD_ERROR=false
 
 CFLAGS="-MD $CFLAGS"
+
+# Check Compiler
+if ! command -v "$CXX" > /dev/null 2>&1; then
+	echo "Error: compiler '$CXX' not found in PATH."
+	exit 1
+fi
+
+if [[ "$TYPE" == "static" ]]; then
+	if ! command -v "ar" > /dev/null 2>&1; then
+		echo "Error: 'ar' program not found in PATH."
+		exit 1
+	fi
+fi
 
 build_objects() {
 	# Create build dir if not exists
@@ -216,10 +230,9 @@ build_translations() {
 
         echo "Generating MO file for $LANG..."
         mkdir -p "$(dirname "$MO_FILE")"
-        msgfmt "$PO_FILE" -o "$MO_FILE"
+        eval $MSGFMT
     done
 }
-
 
 # Sets the current directory
 echo "Entering directory [$(dirname "$0")]"
